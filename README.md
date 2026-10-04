@@ -23,6 +23,10 @@ Ranked for sense by a local model, best first (463 considered):
 
 Every word above uses only the twelve sounds in the first three sets, plus the sight word "the".
 
+![Eight sentences for the first three letter-sets](docs/page-set-3.png)
+
+The images in `docs/` are rendered from the tool's real output (run with `--offline` after the model was cached).
+
 ## Why
 
 Early readers learn letter-sounds a few at a time. A sentence is only useful practice if every word
@@ -64,6 +68,8 @@ The first run downloads the model (about 120 MB) from Hugging Face and caches it
 scored each sentence in roughly a tenth of a second.
 
 ## Use
+
+`readable` below means `node src/cli.js` (or run `npm link` once to get the `readable` command).
 
 ```
 readable --stage 3                 ten sentences using the first three letter-sets
