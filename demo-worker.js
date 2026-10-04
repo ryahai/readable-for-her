@@ -79,7 +79,7 @@ async function run({ step, stage, level, seed, useModel, sentence }) {
   } else if (step === 'phrases') {
     list = (await phrases(known, { count: 5, seed, surprise, onProgress, tries: 80 })).sentences;
   } else {
-    list = (await generate(known, { count: 5, seed, surprise, onProgress, tries: 130 })).sentences;
+    list = (await generate(known, { count: 5, seed, surprise, onProgress, tries: 100 })).sentences;
   }
   return { step, letters, ranked, about: ABOUT[step] ?? '', rule: MOVE_UP,
     items: list.map((s) => ({ text: s.text, sounds: sounds(s.text, known) })) };
