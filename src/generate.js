@@ -24,8 +24,8 @@ export function readableBank(known, tricky = DEFAULT_TRICKY) {
   return bank;
 }
 
-function fill(shapeIndex, bank, known, tricky, random) {
-  const shape = SHAPES[shapeIndex];
+function fill(shapeIndex, bank, known, tricky, random, shapes, sentence) {
+  const shape = shapes[shapeIndex];
   const words = [];
   for (const slot of shape) {
     if (slot.startsWith('=')) {
@@ -45,15 +45,17 @@ function fill(shapeIndex, bank, known, tricky, random) {
   const content = words.filter((w) => !['a', 'the', 'can', 'is'].includes(w));
   if (new Set(content.map((w) => w.toLowerCase())).size !== content.length) return null;
   const text = words.join(' ');
-  return { text: text[0].toUpperCase() + text.slice(1) + '.', words, shape: shapeIndex };
+  // A sentence gets a capital and a full stop; a phrase is left as it is.
+  return { text: sentence ? text[0].toUpperCase() + text.slice(1) + '.' : text, words, shape: shapeIndex };
 }
 
-export function candidates(known, { tricky = DEFAULT_TRICKY, seed = 1, tries = 600 } = {}) {
+export function candidates(known, { tricky = DEFAULT_TRICKY, seed = 1, tries = 600, shapes = SHAPES,
+  sentence = true } = {}) {
   const bank = readableBank(known, tricky);
   const random = rng(seed);
   const seen = new Map();
   for (let i = 0; i < tries; i++) {
-    const made = fill(Math.floor(random() * SHAPES.length), bank, known, tricky, random);
+    const made = fill(Math.floor(random() * shapes.length), bank, known, tricky, random, shapes, sentence);
     if (made && !seen.has(made.text)) seen.set(made.text, made);
   }
   return [...seen.values()];
@@ -110,8 +112,8 @@ export function pick(scored, count, { focus = [] } = {}) {
 // surprise(sentence) -> number, lower is more natural. Pass null to skip the model.
 // onProgress(done, total) is called as sentences are scored, so a caller can show it is alive.
 export async function generate(known, { count = 10, tricky = DEFAULT_TRICKY, seed = 1, focus = [], surprise = null,
-  tries = 600, onProgress = null } = {}) {
-  const made = candidates(known, { tricky, seed, tries });
+  tries = 600, onProgress = null, shapes = SHAPES, sentence = true } = {}) {
+  const made = candidates(known, { tricky, seed, tries, shapes, sentence });
   const scored = [];
   for (const c of made) {
     scored.push({ ...c, score: surprise ? await surprise(c.text) : 0 });

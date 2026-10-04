@@ -38,10 +38,16 @@ export function segment(word, known) {
   const longest = Math.max(1, ...[...known].map((g) => g.length));
   const walk = (at) => {
     if (at === w.length) return [];
+    // Two letters that make one sound must be read as one sound. If she has
+    // not been taught it, the word is out of reach: "sock" is not s-o-c-k.
+    const pair = w.slice(at, at + 2);
+    if (DIGRAPHS.has(pair)) {
+      if (!known.has(pair)) return null;
+      const rest = walk(at + 2);
+      return rest ? [pair, ...rest] : null;
+    }
     for (let size = Math.min(longest, w.length - at); size >= 1; size--) {
       const piece = w.slice(at, at + size);
-      // A double letter must be taught as a double: "bell" needs ll, not l + l.
-      if (size === 1 && w[at + 1] === piece && !DOUBLE_OK.has(piece)) continue;
       if (!known.has(piece)) continue;
       const rest = walk(at + size);
       if (rest) return [piece, ...rest];
@@ -50,7 +56,8 @@ export function segment(word, known) {
   };
   return walk(0);
 }
-const DOUBLE_OK = new Set(); // no doubled single letters are read as two sounds in these word lists
+// Letter pairs that always stand for a single sound in the words this tool uses.
+const DIGRAPHS = new Set(['ck', 'ff', 'll', 'ss', 'zz', 'qu']);
 
 export function isDecodable(word, known, tricky = DEFAULT_TRICKY) {
   return tricky.includes(word.toLowerCase()) || segment(word, known) !== null;

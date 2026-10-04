@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { test } from 'node:test';
 import { candidates, generate, pick, readableBank } from '../src/generate.js';
+import { EAR_LEVELS, STEPS, chains, earScript, phrases, story, threeSoundWords, twoSoundWords } from '../src/ladder.js';
 import { STAGES, checkSentence, graphemesUpTo, isDecodable, parseGraphemes, segment } from '../src/phonics.js';
 import { SHAPES, WORDS } from '../src/words.js';
 
@@ -19,6 +20,9 @@ test('a word is readable only when every sound has been taught', () => {
 test('a digraph has to be taught as a digraph', () => {
   const three = graphemesUpTo(3); // has c and k, not ck
   assert.equal(segment('duck', three), null);
+  assert.equal(segment('sock', three), null); // every letter is known, but ck is one sound she has not met
+  assert.equal(segment('sack', three), null);
+  assert.deepEqual(segment('sock', graphemesUpTo(4)), ['s', 'o', 'ck']);
   assert.deepEqual(segment('duck', graphemesUpTo(4)), ['d', 'u', 'ck']);
   assert.equal(segment('bell', graphemesUpTo(4)), null); // l and ll arrive in set 5
   assert.deepEqual(segment('bell', graphemesUpTo(5)), ['b', 'e', 'll']);
@@ -153,7 +157,93 @@ test('command line: check mode and errors', () => {
   assert.equal(run('--stage', '2', '--count', '0', '--no-model').status, 2);
   assert.equal(run().status, 2);
   assert.match(run('--help').stdout, /Letter-sets, in teaching order/);
-  assert.match(run('--letters', 's,a,t', '--no-model').stdout, /No sentences can be made/);
+  assert.match(run('--letters', 's,a,t', '--no-model').stdout, /Nothing can be made/);
+});
+
+test('listening practice has no letters to read, only parts to say', () => {
+  for (const level of Object.keys(EAR_LEVELS)) {
+    const items = earScript(level, { count: 5 });
+    assert.equal(items.length, 5, level);
+    for (const item of items) assert.equal(item.say.join(''), item.word);
+  }
+  assert.ok(earScript('D').every((item) => item.say.length === 2));
+  assert.ok(earScript('e').every((item) => item.say.length === 3));
+  assert.ok(earScript('C').every((item) => item.say.length === 2 && item.say[0].length <= 2));
+  assert.throws(() => earScript('Z'), RangeError);
+});
+
+test('two-sound words come before three-sound words', () => {
+  const two = twoSoundWords(graphemesUpTo(2));
+  assert.deepEqual(two.map((w) => w.word), ['at', 'in', 'am', 'it', 'an', 'is']);
+  assert.ok(two.every((w) => w.sounds.length === 2));
+  assert.deepEqual(twoSoundWords(graphemesUpTo(1)).map((w) => w.word), ['at']);
+});
+
+test('three-sound words are readable, and stretchy starts come first', () => {
+  for (let stage = 2; stage <= STAGES.length; stage++) {
+    const known = graphemesUpTo(stage);
+    const words = threeSoundWords(known, { count: 40 });
+    assert.ok(words.length >= 5, `stage ${stage}`);
+    for (const w of words) {
+      assert.equal(w.sounds.length, 3, w.word);
+      assert.ok(isDecodable(w.word, known, []), `stage ${stage}: ${w.word}`);
+    }
+    const stretchy = words.map((w) => ['m', 's', 'n', 'f', 'l', 'r', 'v', 'z'].includes(w.sounds[0]));
+    assert.ok(stretchy.indexOf(false) === -1 || !stretchy.slice(stretchy.indexOf(false)).includes(true), `stage ${stage}`);
+  }
+  assert.ok(!threeSoundWords(graphemesUpTo(3), { count: 60 }).some((w) => w.word.includes('ck')));
+});
+
+test('in a chain exactly one sound changes each time', () => {
+  for (let stage = 2; stage <= STAGES.length; stage++) {
+    const known = graphemesUpTo(stage);
+    for (const chain of chains(known, { count: 4 })) {
+      assert.ok(chain.length >= 3);
+      assert.equal(new Set(chain).size, chain.length);
+      for (let i = 1; i < chain.length; i++) {
+        const [a, b] = [segment(chain[i - 1], known), segment(chain[i], known)];
+        assert.ok(a && b, `stage ${stage}: ${chain[i - 1]} ${chain[i]}`);
+        assert.equal(a.filter((sound, at) => sound !== b[at]).length, 1, chain.join(' '));
+      }
+    }
+  }
+});
+
+test('phrases and stories use only what she can read', async () => {
+  for (const stage of [2, 3, 5, 7]) {
+    const known = graphemesUpTo(stage);
+    const { sentences: made } = await phrases(known, { count: 6 });
+    assert.ok(made.length >= 3, `stage ${stage}`);
+    for (const p of made) {
+      assert.ok(checkSentence(p.text, known).every((w) => w.ok), p.text);
+      assert.doesNotMatch(p.text, /\.$/); // a phrase, not a sentence
+    }
+    const { sentences: lines, hero } = await story(known, { length: 5 });
+    assert.ok(lines.length >= 3, `stage ${stage}`);
+    assert.ok(lines.filter((l) => l.words[0] === hero).length >= 2, lines.map((l) => l.text).join(' '));
+    for (const l of lines) assert.ok(checkSentence(l.text, known).every((w) => w.ok), l.text);
+    assert.equal(new Set(lines.map((l) => l.text)).size, lines.length);
+  }
+});
+
+test('the story keeps the sentence the model says follows best', async () => {
+  // A stand-in model that likes the shortest story so far.
+  const { sentences } = await story(graphemesUpTo(3), { length: 3, surprise: async (text) => text.length, seed: 4 });
+  const { sentences: other } = await story(graphemesUpTo(3), { length: 3, surprise: async (text) => -text.length, seed: 4 });
+  assert.ok(sentences.map((s) => s.text).join(' ').length < other.map((s) => s.text).join(' ').length);
+});
+
+test('command line: every step of the ladder runs', () => {
+  assert.match(run('--ladder').stdout, /1\. ear[\s\S]*7\. story/);
+  assert.match(run('--step', 'ear', '--ear', 'A').stdout, /You say: {2}\w+ {2}\.\.\. {2}\w+/);
+  assert.match(run('--step', 'two', '--stage', '2').stdout, /at {5}a - t/);
+  assert.match(run('--step', 'words', '--stage', '3').stdout, / - /);
+  assert.match(run('--step', 'chain', '--stage', '3').stdout, /->/);
+  assert.equal(run('--step', 'phrases', '--stage', '3', '--no-model').status, 0);
+  assert.match(run('--step', 'story', '--stage', '3', '--no-model').stdout, /tells it back/);
+  assert.equal(run('--step', 'nonsense', '--stage', '3').status, 2);
+  assert.equal(run('--step', 'ear', '--ear', 'Q').status, 2);
+  assert.equal(STEPS.length, 7);
 });
 
 test('the real model prefers sense to nonsense', { skip: process.env.READABLE_SKIP_MODEL === '1' }, async (t) => {
