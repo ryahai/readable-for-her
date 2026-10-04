@@ -38,7 +38,7 @@ Two parts, each doing what it is good at:
 
 1. **Rules guarantee she can read it.** A word counts as readable only if it splits, left to right,
    into letter-sounds she has been taught. Digraphs are strict: `duck` needs `ck`, `bell` needs `ll`.
-   Sentences are assembled from a bank of about 150 regular words using a dozen sentence shapes.
+   Sentences are assembled from a bank of about 140 regular words using thirteen sentence shapes.
    This step cannot produce an unreadable word, and the tests check that at every stage.
 2. **A model picks the ones that make sense.** Rules can build "A mat can dig" as easily as "A pig
    can dig". [SmolLM2-135M](https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct), an
