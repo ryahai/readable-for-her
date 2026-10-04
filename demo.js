@@ -148,6 +148,7 @@ function heroHtml() {
     <div class="hero-buttons">
       <button class="big-btn soft" id="collection">🎒 My collection</button>
       <button class="big-btn soft" id="shop">🎁 Rewards · 🪙 ${S.coins}</button>
+      <button class="big-btn soft" id="switch">🙂 Change face</button>
     </div></div>`;
 }
 
@@ -181,6 +182,7 @@ function today() {
   if (next) $('#start').onclick = () => startBlock(next);
   $('#collection').onclick = () => collection();
   $('#shop').onclick = shop;
+  $('#switch').onclick = () => { hush(); pickFace(); };
   $('#checkBtn').onclick = async () => {
     const data = await ask({ step: 'check', stage: S.stage, sentence: $('#checkText').value });
     $('#checkOut').innerHTML = data.words.map((w) => `<span class="word ${w.ok ? '' : 'no'}"><b>${esc(w.word)}</b><small>${esc(w.how)}</small></span>`).join('');
