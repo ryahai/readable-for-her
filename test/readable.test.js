@@ -130,6 +130,20 @@ test('command line: readable sentences without the model', () => {
   for (const s of data.sentences) assert.ok(checkSentence(s.text, known).every((w) => w.ok), s.text);
 });
 
+test('progress is reported while sentences are scored', async () => {
+  const seen = [];
+  const { considered } = await generate(graphemesUpTo(3), { count: 3, surprise: async () => 1, tries: 60,
+    onProgress: (done, total) => seen.push([done, total]) });
+  assert.equal(seen.length, considered);
+  assert.deepEqual(seen.at(-1), [considered, considered]);
+});
+
+test('command line: says it is working before the model is ready, and keeps --json clean', () => {
+  const quiet = run('--stage', '3', '--count', '2', '--no-model', '--json');
+  assert.equal(quiet.stderr, '');
+  JSON.parse(quiet.stdout);
+});
+
 test('command line: check mode and errors', () => {
   const stuck = run('--check', 'The duck sat', '--stage', '3');
   assert.equal(stuck.status, 1);

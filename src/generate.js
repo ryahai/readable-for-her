@@ -108,10 +108,14 @@ export function pick(scored, count, { focus = [] } = {}) {
 }
 
 // surprise(sentence) -> number, lower is more natural. Pass null to skip the model.
+// onProgress(done, total) is called as sentences are scored, so a caller can show it is alive.
 export async function generate(known, { count = 10, tricky = DEFAULT_TRICKY, seed = 1, focus = [], surprise = null,
-  tries = 600 } = {}) {
+  tries = 600, onProgress = null } = {}) {
   const made = candidates(known, { tricky, seed, tries });
   const scored = [];
-  for (const c of made) scored.push({ ...c, score: surprise ? await surprise(c.text) : 0 });
+  for (const c of made) {
+    scored.push({ ...c, score: surprise ? await surprise(c.text) : 0 });
+    if (surprise && onProgress) onProgress(scored.length, made.length);
+  }
   return { sentences: pick(scored, count, { focus }), considered: made.length };
 }

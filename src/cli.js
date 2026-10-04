@@ -70,8 +70,12 @@ if (opt.check !== undefined) {
   process.exit(stuck.length ? 1 : 0);
 }
 
+// Progress goes to the error stream so it shows straight away and never mixes into --json output.
+const note = (text) => process.stderr.write(text);
+
 let surprise = null;
 if (!opt['no-model']) {
+  note('Loading the language model. The first run downloads about 120 MB; on a busy laptop this can take a minute...\n');
   const { loadScorer, DEFAULT_MODEL } = await import('./scorer.js');
   try {
     surprise = await loadScorer(opt.model ?? DEFAULT_MODEL, { offline: opt.offline });
@@ -82,7 +86,13 @@ if (!opt['no-model']) {
 }
 
 const focus = opt.focus ? opt.focus.toLowerCase().split(',').map((g) => g.trim()).filter(Boolean) : [];
-const { sentences, considered } = await generate(known, { count, tricky, seed, focus, surprise });
+const onProgress = (done, total) => {
+  if (done === 1 || done % 20 === 0 || done === total) {
+    note(`${String.fromCharCode(13)}Choosing the sentences that make sense: ${done} of ${total} read`);
+  }
+  if (done === total) note(String.fromCharCode(10, 10));
+};
+const { sentences, considered } = await generate(known, { count, tricky, seed, focus, surprise, onProgress });
 
 if (opt.json) {
   console.log(JSON.stringify({

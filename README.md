@@ -65,7 +65,8 @@ node src/cli.js --stage 3
 
 The first run downloads the model (about 120 MB) from Hugging Face and caches it. After that, add
 `--offline` and it never touches the network. It used about 400 MB of memory on an 8 GB laptop and
-scored each sentence in roughly a tenth of a second.
+scored each sentence in roughly a tenth of a second when memory was free. On the same laptop with
+almost no free memory, a full page took about a minute and a half. It prints its progress while it works.
 
 ## Use
 
@@ -118,7 +119,7 @@ If your programme teaches a different order, pass the exact sounds with `--lette
 npm test
 ```
 
-Sixteen tests. One of them generates sentences at all seven stages and checks every word of every
+Eighteen tests. One of them generates sentences at all seven stages and checks every word of every
 sentence against the phonics rules. One loads the real model and checks it prefers sense to nonsense;
 set `READABLE_SKIP_MODEL=1` to skip that one.
 
