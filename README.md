@@ -1,164 +1,83 @@
 # readable-for-her
 
-Practice sentences a beginner reader can actually sound out.
+A little reading school for a child who is learning to read, where every single word is one she can
+actually sound out.
 
-You tell it which letter-sounds a child has been taught so far. It writes short sentences using only
-those sounds, then a small open-weight language model running on your own computer puts the ones
-that make sense at the top.
+**Try it now, nothing to install: https://ryahai.github.io/readable-for-her/**
 
-```
-$ readable --stage 3 --count 8
-Letter-sounds: s a t p i n m d g o c k   Sight words: the
-Ranked for sense by a local model, best first (463 considered):
-
- 1. The pot is in the pit.
- 2. Sid got a tan map.
- 3. Pam sat on the mat.
- 4. A man is mad.
- 5. Dad can mop in a pan.
- 6. A cat is sad.
- 7. A kid can sit.
- 8. A dog can stand.
-```
-
-Every word above uses only the twelve sounds in the first three sets, plus the sight word "the".
-
-![Eight sentences for the first three letter-sets](docs/page-set-3.png)
-
-The images in `docs/` are rendered from the tool's real output (run with `--offline` after the model was cached).
-
-## Try it in your browser
-
-**https://ryahai.github.io/readable-for-her/**
-
-Nothing to install. The page is a small reading school, laid out like the home learning app this tool
-was built beside:
-
-- pick a face (no names, no sign-up), say how you feel, and follow **today's plan**
-- seven reading steps, easiest first: listen and say the word, build the word from sound tiles, read the
-  word, word chains, phrases, sentences, a story
-- a **break** in the middle, a **calm corner** and a **pause** button always in reach, and
-  "what went well today?" at the end
-- a **star and a coin** for every word or sentence read, a new **level** every ten stars, friends and
-  worlds to unlock, and rewards a grown-up agrees to
-- a grown-up's box to **check any sentence** from a real book
-
-Two open models do the work, and both run without a server:
-
-- **SmolLM2-135M** chooses the phrases, sentences and stories that make sense. It runs inside your
-  browser (Transformers.js, in a worker so the page stays responsive). The first use downloads about
-  100 MB; after that it is cached. "Skip the model" shows the rules-only version.
-- **Kokoro-82M**, an open text-to-speech model, recorded the 28 lines the page says aloud
-  (`voice-lines.js`, `tools/make-voice.mjs`), so every visitor hears the same natural voice.
-
-What the page does not do: it does not say the letter-sounds for the listening and building steps. A
-grown-up says those, because a child learns blending from a person saying pure sounds, and synthetic
-speech gets single sounds wrong. Stars and coins are kept only on the device.
-
-The page (`index.html`, `demo.js`, `demo.css`, `demo-worker.js`) imports the same `src/` files as the
-command-line tool, so both always agree about what she can read.
+![Today's plan: a feelings check-in, seven reading steps with a break in the middle, and a closing](docs/web-today.png)
 
 ## Why
 
-Early readers learn letter-sounds a few at a time. A sentence is only useful practice if every word
-in it can be sounded out with the sounds learned so far. Most "easy" sentences fail that test: "The
-duck is in the pond" looks simple, but a child who knows `c` and `k` and has not met `ck` cannot read
-"duck".
+A child learning to read is taught letter-sounds a few at a time. A sentence is only real practice if
+every word in it can be sounded out with the sounds she has so far.
 
-Writing sentences under that constraint by hand is slow, and the supply runs out fast.
+Most "easy" sentences fail that test. "The duck is in the pond" looks like beginner material. But a
+child who has not yet been taught that ck is one sound cannot read "duck". She can only guess, and
+guessing is the habit you are trying not to build.
 
-## The ladder: from hearing sounds to reading a story
+So you tell this which sounds she has learned, and it gives her words, sentences and tiny stories made
+only from those sounds. A small open model, running on your own device, then picks the ones that make
+sense, so she reads "The dog can dig" and not "The mat can dig".
 
-A child who cannot yet blend sounds by ear will not blend them from print. So the tool does not
-start with sentences. It starts with listening, and climbs:
+## How a day goes
 
-| Step | Command | What she does |
-|---|---|---|
-| 1. Listen | `readable --step ear --ear D` | No letters. You say "a ... m", she says "am". Five levels, A to E, biggest pieces first. |
-| 2. Two sounds | `readable --step two --stage 2` | Reads two-sound words: at, in, am. |
-| 3. Three sounds | `readable --step words --stage 3` | Sounds out m-a-p, then says "map". Words that start with a stretchy sound (mmm, sss) come first. |
-| 4. Chains | `readable --step chain --stage 3` | tin, pin, pit, sit, kit: one sound changes each time. |
-| 5. Phrases | `readable --step phrases --stage 3` | the cat and the dog |
-| 6. Sentences | `readable --stage 3` | The pot is in the pit. |
-| 7. A story | `readable --step story --stage 3` | Five sentences about one person: actual reading. |
+She picks a face. No name, no sign-up. Then:
 
-`readable --ladder` prints this with the instruction for each step. Every step tells you the same
-rule for moving on: four out of five without help, on two different days. The grown-up decides;
-the tool never promotes her on its own.
+1. How are you feeling? Any feeling is okay. A sad or worried face is offered the calm corner first.
+2. Listen and say the word. No letters. A grown-up says "m ... a ... p", she says "map".
+3. Build the word. A grown-up says the sounds, she taps the tiles.
+4. Read the word.
+5. Break time. Water, a snack, a stretch. No work.
+6. Word chains. tin, pin, pit, sit. One sound changes each time.
+7. Phrases, then sentences, then a story of five sentences about one person.
+8. What went well today?
 
-In a story the model does a different job. It reads the story so far together with each possible
-next sentence and keeps the one that follows most naturally. Two rules stop it doing what language
-models like to do, which is repeat themselves: a sentence must end somewhere new, and must not be
-built like the one before it.
+![Building a word from sound tiles](docs/web-build.png)
 
-```
-$ readable --step story --stage 3 --count 5
-Kim is on the mat.
-Kim sat on the pit.
-The map is in the pan.
-Kim got the pot.
-Kim is mad.
-```
+Every word she reads earns a star and a coin. Ten stars is a new level, with a new friend and a new
+world to unlock. Coins buy rewards, and a grown-up has to agree each one. A calm corner and a pause
+button are always in reach, and a warm recorded voice reads the instructions aloud.
 
-The listening levels are: A two words joined (rain ... bow), B two beats (ta ... ble), C first sound
-then the rest (m ... at), D two sounds (a ... m), E three sounds (m ... a ... n).
+![A sentence chosen by the model](docs/web-sentence.png)
+
+![Level up: a new friend and a new world](docs/web-level-up.png)
+
+The app never decides she has passed. She moves up when she gets four out of five without help, on two
+different days, and the grown-up decides.
+
+There is also a box for grown-ups: type any sentence from a real book and it shows which words she
+cannot sound out yet.
 
 ## How it works
 
-Two parts, each doing what it is good at:
+Rules decide what she can read. A word only gets in if it can be split, left to right, into sounds she
+has been taught. Two letters that make one sound (ck, ll, ss) count as one sound, so "sock" is never
+offered as s-o-c-k. This part cannot put an unreadable word on the page, and a test proves it by
+checking every word at every level.
 
-1. **Rules guarantee she can read it.** A word counts as readable only if it splits, left to right,
-   into letter-sounds she has been taught. Digraphs are strict: `duck` needs `ck`, `bell` needs `ll`, and `sock` is never s-o-c-k.
-   Sentences are assembled from a bank of about 140 regular words using thirteen sentence shapes.
-   This step cannot produce an unreadable word, and the tests check that at every stage.
-2. **A model picks the ones that make sense.** Rules can build "A mat can dig" as easily as "A pig
-   can dig". [SmolLM2-135M](https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct), an
-   open-weight model (Apache-2.0), scores how surprising each sentence is, and the least surprising
-   ones win. Sentences are compared within their own shape, because a language model otherwise
-   favours whatever pattern is shortest.
+A small model decides what makes sense. Each possible sentence is scored by
+[SmolLM2-135M](https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct), an open-weight model. The
+score is how surprised the model is by the sentence: "The cat sat on a mat" scores better than "The mat
+sat on a cat". The model never writes anything. It only chooses, so it cannot break the spelling rules.
 
-The model never writes text. It only ranks. So nothing it does can put an unreadable word on the page.
+It all runs in the browser. The model runs inside the page through Transformers.js, in a background
+worker so the page stays responsive. There is no server and no account, and nothing is sent anywhere.
+The first sentence page downloads the model (about 100 MB, once). If the model cannot load, the page
+says so and carries on with the rules alone, clearly labelled.
 
-## Install
+The voice is a second open model. The lines the page says aloud were recorded once with
+[Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M), so every visitor hears the same natural voice
+in any browser. The voice does not say the letter-sounds: a grown-up does, because a child learns
+blending from a real person and a machine gets single sounds wrong.
 
-Needs Node.js 20 or newer.
+![Break time](docs/web-break.png)
 
-```
-git clone <this repo>
-cd readable-for-her
-npm install
-node src/cli.js --stage 3
-```
+![Friends and worlds to unlock](docs/web-worlds.png)
 
-The first run downloads the model (about 120 MB) from Hugging Face and caches it. After that, add
-`--offline` and it never touches the network. It used about 400 MB of memory on an 8 GB laptop and
-scored each sentence in roughly a tenth of a second when memory was free. On the same laptop with
-almost no free memory, a full page took about a minute and a half. It prints its progress while it works.
+## The sounds
 
-## Use
-
-`readable` below means `node src/cli.js` (or run `npm link` once to get the `readable` command).
-
-```
-readable --stage 3                 ten sentences using the first three letter-sets
-readable --letters s,a,t,p,i,n     use exactly these letter-sounds instead
-readable --stage 4 --focus ck      prefer sentences that practise "ck"
-readable --check "The duck is in the pond" --stage 3
-                                   show which words she cannot read yet
-```
-
-| Option | Meaning |
-|---|---|
-| `--count N` | How many sentences (default 10) |
-| `--tricky a,b` | Sight words she knows (default: `the`) |
-| `--seed N` | Repeat a run exactly (default 1); change it for a fresh page |
-| `--no-model` | Skip the model: sentences are readable but not ranked for sense |
-| `--offline` | Never contact the network |
-| `--model ID` | Another open-weight causal language model from Hugging Face |
-| `--json` | Machine-readable output |
-
-Letter-sets follow the order most UK synthetic-phonics programmes use (Letters and Sounds, Phase 2
-sets 1-5 and Phase 3 sets 6-7):
+Letter-sets follow the order most UK synthetic-phonics programmes use (Letters and Sounds):
 
 | Set | Letter-sounds |
 |---|---|
@@ -170,32 +89,51 @@ sets 1-5 and Phase 3 sets 6-7):
 | 6 | j v w x |
 | 7 | y z zz qu |
 
-If your programme teaches a different order, pass the exact sounds with `--letters`.
+Pick the set she has reached on the home screen.
+
+## For grown-ups who like a terminal
+
+The same rules are also a small command-line tool, for printing a page of sentences or checking a book.
+It needs Node.js 20 or later.
+
+```
+git clone https://github.com/ryahai/readable-for-her
+cd readable-for-her
+npm install
+node src/cli.js --stage 3
+node src/cli.js --step story --stage 3
+node src/cli.js --check "The duck is in the pond" --stage 3
+node src/cli.js --ladder
+```
+
+`--letters s,a,t,p,i,n` uses exactly those sounds, `--no-model` skips the model, and `--help` lists the rest.
+
+## What is in here
+
+| File | Job |
+|---|---|
+| `index.html`, `demo.js`, `demo.css` | The reading school in the browser |
+| `demo-worker.js` | Runs the rules and the model in the background |
+| `src/phonics.js`, `src/words.js` | The sounds, the word bank and the reading rules |
+| `src/generate.js`, `src/ladder.js` | Sentences, phrases, chains, stories, listening items |
+| `src/scorer.js`, `src/cli.js` | The model scorer and the command-line tool |
+| `voice-lines.js`, `voice/`, `tools/make-voice.mjs` | The spoken lines and how they were recorded |
+| `test/` | Twenty-five tests (`npm test`) |
 
 ## Limits
 
-- Stories are loose: one person, things happening, no real plot. They are for reading practice, not literature.
-- The model is tiny, so some sentences are silly ("A hen can mop"). They are still readable, which
-  is the part that has to be right. Read the page before you hand it over.
-- Set 1 alone (`s a t p`) cannot make a sentence with this word bank; the tool says so.
-- English only, short-vowel words only. No long vowels, blends are limited to a few words.
-- The word bank is small and hand-written. Adding words is one line in `src/words.js`.
-
-## Tests
-
-```
-npm test
-```
-
-Twenty-five tests. One of them generates sentences at all seven stages and checks every word of every
-sentence against the phonics rules. One loads the real model and checks it prefers sense to nonsense;
-set `READABLE_SKIP_MODEL=1` to skip that one.
+- The model is tiny, so some sentences are silly. They are still readable, which is the part that has to be right.
+- Stories are loose: one person, things happening, no real plot.
+- English only, short-vowel words only.
+- Set 1 alone cannot make a sentence; the page says so and asks for a later set.
+- On a slow computer the model can take a minute to choose a page the first time. There is a "skip the model" button.
+- Stars and coins are kept only on the device.
 
 ## Built with
 
-- [Transformers.js](https://github.com/huggingface/transformers.js) (Apache-2.0) to run the model locally
+- [Transformers.js](https://github.com/huggingface/transformers.js) (Apache-2.0)
 - [SmolLM2-135M-Instruct](https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct) (Apache-2.0)
-- [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) (Apache-2.0), through kokoro-js, for the recorded voice of the browser version
+- [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) (Apache-2.0), through kokoro-js
 
 The code in this repository was written by an AI coding agent (Claude Code) working to its owner's
 direction, during the DEV Hacktoberfest 2026 Weekend Challenge window.
