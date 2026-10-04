@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Readable for her: reading practice she can actually sound out</title>
+<meta name="description" content="A small reading school in the browser. Every word is built only from the letter-sounds a beginner reader knows, and a small open model running on your device chooses the sentences that make sense.">
+<link rel="stylesheet" href="./demo.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
+</head>
+<body data-theme="savannah">
+<div class="stars-bg" aria-hidden="true"></div>
+<div class="wrap" id="app"></div>
+
+<div class="dock" id="dock" hidden>
+  <button class="icon-btn" id="homeBtn" aria-label="Home">🏠</button>
+  <div class="row">
+    <button class="dock-btn" id="voiceBtn" aria-pressed="true">🔊 Read aloud</button>
+    <button class="dock-btn" id="calmBtn">🫧 Calm corner</button>
+    <button class="dock-btn" id="pauseBtn">⏸ Pause</button>
+  </div>
+</div>
+
+<script type="module" src="./demo.js"></script>
+</body>
+</html>

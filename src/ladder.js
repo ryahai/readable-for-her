@@ -119,8 +119,9 @@ const PHRASE_SHAPES = [
   ['determiner', 'thing', 'where', 'determiner', 'place'],
 ];
 
-export async function phrases(known, { count = 8, tricky = DEFAULT_TRICKY, seed = 1, surprise = null, onProgress = null } = {}) {
-  return generate(known, { count, tricky, seed, surprise, onProgress, shapes: PHRASE_SHAPES, sentence: false, tries: 300 });
+export async function phrases(known, { count = 8, tricky = DEFAULT_TRICKY, seed = 1, surprise = null, onProgress = null,
+  tries = 300 } = {}) {
+  return generate(known, { count, tricky, seed, surprise, onProgress, shapes: PHRASE_SHAPES, sentence: false, tries });
 }
 
 // A story is a handful of sentences about one named person. The model reads

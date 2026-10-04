@@ -27,6 +27,37 @@ Every word above uses only the twelve sounds in the first three sets, plus the s
 
 The images in `docs/` are rendered from the tool's real output (run with `--offline` after the model was cached).
 
+## Try it in your browser
+
+**https://ryahai.github.io/readable-for-her/**
+
+Nothing to install. The page is a small reading school, laid out like the home learning app this tool
+was built beside:
+
+- pick a face (no names, no sign-up), say how you feel, and follow **today's plan**
+- seven reading steps, easiest first: listen and say the word, build the word from sound tiles, read the
+  word, word chains, phrases, sentences, a story
+- a **break** in the middle, a **calm corner** and a **pause** button always in reach, and
+  "what went well today?" at the end
+- a **star and a coin** for every word or sentence read, a new **level** every ten stars, friends and
+  worlds to unlock, and rewards a grown-up agrees to
+- a grown-up's box to **check any sentence** from a real book
+
+Two open models do the work, and both run without a server:
+
+- **SmolLM2-135M** chooses the phrases, sentences and stories that make sense. It runs inside your
+  browser (Transformers.js, in a worker so the page stays responsive). The first use downloads about
+  100 MB; after that it is cached. "Skip the model" shows the rules-only version.
+- **Kokoro-82M**, an open text-to-speech model, recorded the 28 lines the page says aloud
+  (`voice-lines.js`, `tools/make-voice.mjs`), so every visitor hears the same natural voice.
+
+What the page does not do: it does not say the letter-sounds for the listening and building steps. A
+grown-up says those, because a child learns blending from a person saying pure sounds, and synthetic
+speech gets single sounds wrong. Stars and coins are kept only on the device.
+
+The page (`index.html`, `demo.js`, `demo.css`, `demo-worker.js`) imports the same `src/` files as the
+command-line tool, so both always agree about what she can read.
+
 ## Why
 
 Early readers learn letter-sounds a few at a time. A sentence is only useful practice if every word
@@ -164,6 +195,7 @@ set `READABLE_SKIP_MODEL=1` to skip that one.
 
 - [Transformers.js](https://github.com/huggingface/transformers.js) (Apache-2.0) to run the model locally
 - [SmolLM2-135M-Instruct](https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct) (Apache-2.0)
+- [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) (Apache-2.0), through kokoro-js, for the recorded voice of the browser version
 
 The code in this repository was written by an AI coding agent (Claude Code) working to its owner's
 direction, during the DEV Hacktoberfest 2026 Weekend Challenge window.
