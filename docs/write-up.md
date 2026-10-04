@@ -57,7 +57,7 @@ There is also a box for grown-ups. Type any sentence from a real book and it sho
 
 ## Code
 
-{% embed https://github.com/ryahai/readable-for-her %}
+{% github ryahai/readable-for-her no-readme %}
 
 ## How I Built It
 
